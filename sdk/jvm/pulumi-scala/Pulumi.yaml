@@ -1,0 +1,7 @@
+name: scala-experiment
+description: A Pulumi Scala PoC using a JAR.
+runtime:
+  name: jvm
+  options:
+    logtostderr: true
+    v: 5

@@ -1,0 +1,108 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+
+plugins {
+    id("application")
+    id("java-library") // for the api/impl separation
+    id("scala")
+    id("com.google.protobuf") version "0.8.18"
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+group = "io.pulumi.scala"
+version = "0.0.0"
+
+def protobufVersion = "3.20.0"
+def protocVersion = protobufVersion
+
+ext {
+    scalapbVersion = "0.11.10"
+}
+
+dependencies {
+    implementation("io.pulumi:pulumi:1.0.0") // just for bootstrap
+    implementation('com.google.guava:guava:31.1-jre') // just for bootstrap
+    implementation('com.google.code.gson:gson:2.9.0') // just for bootstrap
+
+    implementation("org.scala-lang:scala3-library_3:3.1.1")
+    testImplementation("org.scalatest:scalatest_3:3.2.11")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+
+    implementation("com.thesamet.scalapb:scalapb-runtime-grpc_3:${scalapbVersion}")
+    implementation("io.grpc:grpc-netty:1.45.1")
+//    (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX()) ?
+            implementation("io.netty:netty-transport-native-kqueue:4.1.75.Final") //:
+            implementation("io.netty:netty-transport-native-epoll:4.1.75.Final")
+
+    if (JavaVersion.current().isJava9Compatible()) {
+        // Workaround for @javax.annotation.Generated
+        // see: https://github.com/grpc/grpc-java/issues/3633
+        implementation("javax.annotation:javax.annotation-api:+")
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${protocVersion}"
+    }
+    plugins {
+        scalapb {
+            artifact = (DefaultNativePlatform.getCurrentOperatingSystem().isWindows()) ?
+                    "com.thesamet.scalapb:protoc-gen-scala:${scalapbVersion}:windows@bat" :
+                    "com.thesamet.scalapb:protoc-gen-scala:${scalapbVersion}:unix@sh"
+        }
+    }
+
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                // If you don't want java code to be generated
+                remove java
+            }
+            task.plugins {
+                scalapb {
+                    // Add any ScalaPB generator options here
+                    // See: https://scalapb.github.io/scalapbc.html#passing-generator-parameters
+                    option "grpc"
+                }
+            }
+        }
+    }
+}
+
+// Add generated Scala code as a source directory
+sourceSets {
+    main {
+        proto {
+            // In addition to the default 'src/main/proto'
+            srcDir "$rootDir/../proto"
+        }
+        scala {
+            srcDirs "src/main/scala"
+            srcDirs "${protobuf.generatedFilesBaseDir}/main/scalapb"
+        }
+    }
+}
+
+application {
+    mainClass = project.hasProperty("mainClass")
+            ? project.getProperty("mainClass")
+            : 'io.pulumi.scala.Main'
+}
+
+// Workaround a random Gradle bug
+// TODO: fix the workaround it fails
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.with {
+        targetCompatibility = ''
+    }
+}

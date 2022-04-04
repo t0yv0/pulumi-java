@@ -9,3 +9,6 @@ pluginManagement {
 
 rootProject.name = "pulumi"
 include("pulumi")
+include 'pulumi-scala'
+include 'pulumi-scala'
+

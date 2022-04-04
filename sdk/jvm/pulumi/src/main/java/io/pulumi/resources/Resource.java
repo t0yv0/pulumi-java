@@ -168,7 +168,7 @@ public abstract class Resource {
                     // establish what transformation to apply in the first place, and to compute
                     // inheritance of other resource options in the Resource constructor before
                     // transformations are run (so modifying it here would only even partially
-                    // take affect).
+                    // take effect).
                     // It's theoretically possible this restriction could be
                     // lifted in the future, but for now just disallow re-parenting resources in
                     // transformations to be safe.
@@ -239,7 +239,7 @@ public abstract class Resource {
         } else {
             // Note: we've checked above that at most one of options.provider or options.providers is set.
 
-            // If options.provider is set, treat that as if we were given a array of provider
+            // If options.provider is set, treat that as if we were given an array of provider
             // with that single value in it. Otherwise, take the array of providers, convert it
             // to a map and combine with any providers we've already set from our parent.
             var providerList = options.provider != null

@@ -464,7 +464,7 @@ func probeExecutor() (string, error) {
 			switch file.Name() {
 			case "pom.xml":
 				return mvn, nil
-			case "settings.gradle", "settings.gradle.kts":
+			case "settings.gradle", "settings.gradle.kts", "build.gradle", "build.gradle.kts":
 				return gradle, nil
 			}
 		}
